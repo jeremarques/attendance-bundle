@@ -294,15 +294,17 @@
                             </button>
                         </div>
 
-                        <div class="col-md-4" v-if="atendimento && atendimento.status==='encerrando'">
-                            <button type="button"
-                                    class="btn btn-secondary btn-block"
-                                    v-on:click="encerrarRedirecionar"
-                                    title="{{ 'button.redirect'|trans }}">
-                                <i class="fa fa-stop"></i>
-                                <span>{{ 'button.redirect'|trans }}</span>
-                            </button>
-                        </div>
+                        {#
+                            <div class="col-md-4" v-if="atendimento && atendimento.status==='encerrando'">
+                                <button type="button"
+                                        class="btn btn-secondary btn-block"
+                                        v-on:click="encerrarRedirecionar"
+                                        title="{{ 'button.redirect'|trans }}">
+                                    <i class="fa fa-stop"></i>
+                                    <span>{{ 'button.redirect'|trans }}</span>
+                                </button>
+                            </div>
+                        #}
 
                         <div class="col-md-4" v-if="atendimento && atendimento.status==='encerrando'">
                             <button type="button"
@@ -592,6 +594,21 @@
                                         {% endverbatim %}
                                     </td>
                                 </tr>
+                                <tr v-if="!atendimento">
+                                    <th>
+                                        Chamar esta senha
+                                    </th>
+                                    <td>
+                                        <button class="btn btn-primary font-weight-bold w-100"
+                                            type="button"
+                                            title="Chamar senha"
+                                            v-on:click="chamarEspecifico($event, atendimentoInfo)"
+                                        >
+                                            <i class="fa fa-bullhorn pr-1"></i>
+                                            Chamar senha
+                                        </button>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -599,10 +616,10 @@
             </div>
         </div>
     </div>
-    
+
     {# som executado quando a fila deixa de estar fazia #}
     <audio id="alert" src="{{ asset('bundles/novosgaattendance/sounds/alert.wav') }}" style="display:none"></audio>
-        
+
     <div id="novosga-clock" title="{{ 'server.datetime'|trans }}" class="clock"></div>
 {% endblock %}
 
@@ -629,7 +646,7 @@
             alertNaoCompareceu = '{{ 'alert.no_show.text'|trans }}',
             alertEncerrar      = '{{ 'alert.finish.text'|trans }}',
             wsSecret           = '{{ wsSecret }}';
-    
+
         App.Clock.init("novosga-clock", {{ time }});
     </script>
     <script type="text/javascript" src="{{ asset('bundles/novosgaattendance/js/sweetalert.min.js') }}"></script>

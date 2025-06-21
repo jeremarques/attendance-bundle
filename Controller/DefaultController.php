@@ -270,6 +270,70 @@ class DefaultController extends AbstractController
     }
 
     /**
+     * Chama uma senha específico da fila.
+     *
+     * @param Novosga\Request $request
+     *
+     * @Route("/chamar-especifico/{id}", name="novosga_attendance_chamar_especifico", methods={"POST"})
+     */
+    public function chamarEspecifico(
+        Request $request,
+        AtendimentoService $atendimentoService,
+        FilaService $filaService,
+        UsuarioService $usuarioService,
+        TranslatorInterface $translator,
+        $id
+    ) {
+        $envelope = new Envelope();
+        
+        $attempts       = 5;
+        $success        = false;
+        $usuario        = $this->getUser();
+        $unidade        = $usuario->getLotacao()->getUnidade();
+        $senhaEscolhida = null;
+        
+        $local    = $this->getNumeroLocalAtendimento($usuarioService, $usuario);
+        $servicos = $usuarioService->servicos($usuario, $unidade);
+        
+        do {
+            $tipo         = $this->getTipoAtendimento($usuarioService, $usuario);
+            // seleciona a senha especifica $id
+            $atendimentos = $filaService->filaAtendimento($unidade, $usuario, $servicos, $tipo, 1, $id);
+            if (count($atendimentos)) {
+                $senhaEscolhida = $atendimentos[0];
+                $success = $atendimentoService->chamar($senhaEscolhida, $usuario, $local);
+                if (!$success) {
+                    usleep(100);
+                }
+                --$attempts;
+            } else {
+                // a senha nao existe
+                break;
+            }
+        } while (!$success && $attempts > 0);
+        
+        // response
+        if (!$success) {
+            if (!$senhaEscolhida) {
+                throw new Exception(
+                    $translator->trans('error.queue.empty', [], self::DOMAIN)
+                );
+            } else {
+                throw new Exception(
+                    $translator->trans('error.attendance.in_process', [], self::DOMAIN)
+                );
+            }
+        }
+
+        $atendimentoService->chamarSenha($unidade, $senhaEscolhida);
+
+        $data = $senhaEscolhida->jsonSerialize();
+        $envelope->setData($data);
+
+        return $this->json($envelope);
+    }
+
+    /**
      * Inicia o atendimento com o proximo da fila.
      *
      * @param Novosga\Request $request

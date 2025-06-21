@@ -164,6 +164,33 @@ var App = App || {};
                 }
             },
             
+            chamarEspecifico: function (e, senha) {
+                var self = this;
+                
+                if (!e.target.disabled) {
+                    e.target.disabled = true;
+
+                    App.ajax({
+                        url: App.url('/novosga.attendance/chamar-especifico/') + senha.id,
+                        type: 'post',
+                        success: function (response) {
+                            self.atendimento = response.data;
+                            App.Websocket.emit('call ticket', {
+                                unity: unidade.id,
+                                service: self.atendimento.servico.id,
+                                hash: self.atendimento.hash
+                            });
+                            $('#dialog-senha').modal('hide');
+                        },
+                        complete: function () {
+                            setTimeout(function () {
+                                e.target.disabled = false;
+                            }, 5 * 1000);
+                        }
+                    });
+                }
+            },
+
             iniciar: function () {
                 var self = this;
                 App.ajax({
